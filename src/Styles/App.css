@@ -31,3 +31,11 @@
     transform: rotate(360deg);
   }
 }
+
+.logo{
+  text-align: left;
+}
+
+.logo img{
+  width: 500px;
+}
