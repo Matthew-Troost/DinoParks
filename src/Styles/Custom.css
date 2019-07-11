@@ -8,3 +8,7 @@
     height: 50px;
     display: inline-block;
 }
+
+.block img{
+    width: 25px;
+}

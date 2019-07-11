@@ -2,14 +2,17 @@ import React, { Component } from "react";
 import '../Styles/Custom.css';
 import { times, find, forEach, remove, findIndex } from 'lodash';
 import axios from 'axios';
+import wrench from '../Assets/dino-parks-wrench.png';
 
 class Grid extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
+            loading: true,
             logs: [],
-            dinosaurs: []
+            dinosaurs: [],
+            maintainedZones: []
         }
     }
 
@@ -29,6 +32,7 @@ class Grid extends Component {
 
     filterData() {
         const dinosaurs = [];
+        const maintainedZones = [];
 
         forEach(this.state.logs, function (log) {
 
@@ -65,11 +69,14 @@ class Grid extends Component {
                 case 'dino_location_updated':
                     if (dino) {
                         if (dino.location) {
-
+                            if (dino.time_of_locating < new Date(log.time)) {
+                                dinosaurs[index].location = log.location;
+                                dinosaurs[index].time_of_locating = new Date(log.time);
+                            }
                         }
                         else {
                             dinosaurs[index].location = log.location;
-                            dinosaurs[index].time_of_locating = log.time;
+                            dinosaurs[index].time_of_locating = new Date(log.time);
                         }
                     }
                     else {
@@ -77,7 +84,41 @@ class Grid extends Component {
                             {
                                 id: log.dinosaur_id,
                                 location: log.location,
-                                time_of_locating: log.time
+                                time_of_locating: new Date(log.time)
+                            });
+                    }
+                    break;
+                case 'dino_fed':
+                    if (dino) {
+                        if (dino.time_of_feed) {
+                            if (dino.time_of_feed < new Date(log.time)) {
+                                dinosaurs[index].time_of_feed = new Date(log.time);
+                            }
+                        }
+                        else {
+                            dinosaurs[index].time_of_feed = new Date(log.time);
+                        }
+                    } else {
+                        dinosaurs.push(
+                            {
+                                id: log.dinosaur_id,
+                                time_of_feed: new Date(log.time)
+                            });
+                    }
+                    break;
+                case 'maintenance_performed':
+                    index = findIndex(maintainedZones, { location: log.location });
+
+                    if (index > -1) {
+                        var zone = find(maintainedZones, ['location', log.location]);
+                        if (zone.last_kept < new Date(log.time)) {
+                            maintainedZones[index].last_kept = new Date(log.time);
+                        }
+                    } else {
+                        maintainedZones.push(
+                            {
+                                location: log.location,
+                                last_kept: new Date(log.time)
                             });
                     }
                     break;
@@ -87,8 +128,24 @@ class Grid extends Component {
         });
 
         this.setState({
-            dinosaurs: dinosaurs
+            dinosaurs: dinosaurs,
+            maintainedZones: maintainedZones
         });
+    }
+
+    needsMaintenance(location) {
+        const zone = find(this.state.maintainedZones, ['location', location]);
+        var date = new Date();
+
+        if (zone && zone.last_kept < date.setDate(date.getDate() - 30)) {
+            return true;
+        } else {
+            return null;
+        }
+    }
+
+    safeToEnter(location){
+
     }
 
     render() {
@@ -104,7 +161,7 @@ class Grid extends Component {
                         <span>{i + 1}</span>
                         {times(26, (x) =>
                             <div className="block">
-                                {alphabet[x] + (i + 1)}
+                                {this.needsMaintenance(alphabet[x] + (i + 1)) ? <img alt="needs maintenance" src={wrench} /> : ''}
                             </div>
                         )}
                     </div>
@@ -113,7 +170,6 @@ class Grid extends Component {
 
         );
     }
-
 }
 
 export default Grid;
