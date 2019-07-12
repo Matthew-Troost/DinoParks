@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  background-color: #eff6ff;
 }
 
 .App-logo {
@@ -37,5 +38,6 @@
 }
 
 .logo img{
-  width: 500px;
+  width: 400px;
+  margin: 20px 15px 50px;
 }
